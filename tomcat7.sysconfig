@@ -12,7 +12,7 @@
 #
 # This is the installation directory of tomcat 7.
 # Default is /opt/tomcat7.
-#CATALINA_HOME="/opt/tomcat7"
+#CATALINA_HOME="/usr/share/tomcat7"
 
 # RUNAS_USER
 #
