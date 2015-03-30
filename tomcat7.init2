@@ -53,7 +53,7 @@ fi
 CONNECTOR_PORT="${CONNECTOR_PORT:-8080}"
 
 # Path to the tomcat launch script
-TOMCAT_SCRIPT="/usr/share/tomcat7/bin/catalina.sh"
+TOMCAT_SCRIPT="/usr/sbin/tomcat7"
 
 # Tomcat program name
 TOMCAT_PROG="${NAME}"
@@ -122,8 +122,8 @@ function makeHomeDir() {
 }
 
 function parseOptions() {
+    options="export TOMCAT_NAME=${NAME};export TOMCAT_CFG=${TOMCAT_CFG};"
     if [ -r "$TOMCAT_CFG" ]; then
-        options="export TOMCAT_NAME=${NAME};export TOMCAT_CFG=${TOMCAT_CFG};"
         options="$options $(
                      awk '!/^#/ && !/^$/ { ORS=" "; print "export ", $0, ";" }' \
                      $TOMCAT_CFG

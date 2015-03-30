@@ -16,7 +16,7 @@
 
 Summary:    Apache Servlet/JSP Engine, RI for Servlet 2.4/JSP 2.0 API
 Name:       tomcat7
-Version:    7.0.55
+Version:    7.0.59
 BuildArch:  noarch
 Release:    1
 License:    Apache Software License
@@ -26,7 +26,7 @@ Source0:    apache-tomcat-%{version}.tar.gz
 Source1:    %{name}.init2
 Source2:    %{name}.sysconfig
 Source3:    %{name}.logrotate
-Requires:   jdk
+Requires:   java-1.7.0-oracle-devel, %{name}-lib = %{version}-%{release}
 BuildRoot:  %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 %description
@@ -44,41 +44,45 @@ learn more about getting involved, click here.
 This package contains the base tomcat installation that depends on Sun's JDK and not
 on JPP packages.
 
-%package manager
-Summary: The management web application of Apache Tomcat.
-Group: System Environmnet/Applications
-Requires: %{name}-%{version}-%{release}
-BuildArch: noarch
+%package lib
+Group: Development/Compilers
+Summary: Libraries needed to run the Tomcat Web container
+# Requires: %{name} = %{version}-%{release}
 
-%description manager
-The management web application of Apache Tomcat.
+%description lib
+Libraries needed to run the Tomcat Web container
 
-%package docs
-Summary: The docs web application of Apache Tomcat.
-Group: System Environmnet/Applications
-Requires: %{name}-%{version}-%{release}
-BuildArch: noarch
+%package admin-webapps
+Group: System Environment/Applications
+Summary: The host-manager and manager web applications for Apache Tomcat
+Requires: %{name} = %{version}-%{release}
 
-%description docs
-The docs web application of Apache Tomcat.
+%description admin-webapps
+The host-manager and manager web applications for Apache Tomcat.
 
-%package examples
-Summary: The examples web application of Apache Tomcat.
-Group: System Environmnet/Applications
-Requires: %{name}-%{version}-%{release}
-BuildArch: noarch
+%package docs-webapp
+Group: System Environment/Applications
+Summary: The docs web application for Apache Tomcat
+Requires: %{name} = %{version}-%{release}
 
-%description examples
-The examples web application of Apache Tomcat.
+%description docs-webapp
+The docs web application for Apache Tomcat.
 
-%package host-manager
-Summary: The host-manager web application of Apache Tomcat.
-Group: System Environmnet/Applications
-Requires: %{name}-%{version}-%{release}
-BuildArch: noarch
+%package examples-webapp
+Group: System Environment/Applications
+Summary: The examples web application for Apache Tomcat
+Requires: %{name} = %{version}-%{release}
 
-%description host-manager
-The host-manager web application of Apache Tomcat.
+%description examples-webapp
+The examples web application for Apache Tomcat.
+
+%package root-webapp
+Group: System Environment/Applications
+Summary: The ROOT web application for Apache Tomcat
+Requires: %{name} = %{version}-%{release}
+
+%description root-webapp
+The ROOT web application for Apache Tomcat.
 
 
 %prep
@@ -97,12 +101,51 @@ cd %{buildroot}/%{tomcat_home}/
 ln -s /var/log/%{name}/ logs
 cd -
 
+# Put temp in /var/cache and link back.
+rm -rf %{buildroot}/%{tomcat_home}/temp
+install -d -m 755 %{buildroot}/var/cache/%{name}/temp
+cd %{buildroot}/%{tomcat_home}/
+ln -s /var/cache/%{name}/temp temp
+cd -
+
+# Put work in /var/cache and link back.
+rm -rf %{buildroot}/%{tomcat_home}/work
+install -d -m 755 %{buildroot}/var/cache/%{name}/work
+cd %{buildroot}/%{tomcat_home}/
+ln -s /var/cache/%{name}/work work
+cd -
+
 # Put conf in /etc/ and link back.
 install -d -m 755 %{buildroot}/%{_sysconfdir}
 mv %{buildroot}/%{tomcat_home}/conf %{buildroot}/%{_sysconfdir}/%{name}
 cd %{buildroot}/%{tomcat_home}/
 ln -s %{_sysconfdir}/%{name} conf
 cd -
+
+# Put webapps in /var/lib and link back.
+install -d -m 755 %{buildroot}/var/lib/%{name}/
+mv %{buildroot}/%{tomcat_home}/webapps %{buildroot}/var/lib/%{name}
+cd %{buildroot}/%{tomcat_home}/
+ln -s /var/lib/%{name}/webapps webapps
+cd -
+
+# Put lib in /usr/share/java and link back.
+install -d -m 755 %{buildroot}/usr/share/java
+mv %{buildroot}/%{tomcat_home}/lib %{buildroot}/usr/share/java/%{name}
+cd %{buildroot}/%{tomcat_home}/
+ln -s /usr/share/java/%{name} lib
+cd -
+
+# Put docs in /usr/share/doc
+install -d -m 755 %{buildroot}/usr/share/doc/%{name}-%{version}
+mv %{buildroot}/%{tomcat_home}/{RUNNING.txt,LICENSE,NOTICE,RELEASE*} %{buildroot}/usr/share/doc/%{name}-%{version}
+
+# Put executables in /usr/bin
+rm  %{buildroot}/%{tomcat_home}/bin/*bat
+install -d -m 755 %{buildroot}/usr/{bin,sbin}
+mv %{buildroot}/%{tomcat_home}/bin/digest.sh %{buildroot}/usr/bin/%{name}-digest
+mv %{buildroot}/%{tomcat_home}/bin/tool-wrapper.sh %{buildroot}/usr/bin/%{name}-tool-wrapper
+mv %{buildroot}/%{tomcat_home}/bin/catalina.sh %{buildroot}/usr/sbin/%{name}
 
 # Drop init script
 install -d -m 755 %{buildroot}/%{_initrddir}
@@ -125,36 +168,40 @@ getent passwd %{tomcat_user} >/dev/null || /usr/sbin/useradd --comment "Tomcat D
 
 %files
 %defattr(-,%{tomcat_user},%{tomcat_group})
-%dir %{tomcat_home}
-%{tomcat_home}/bin
-%{tomcat_home}/conf
-%{tomcat_home}/lib
-%{tomcat_home}/logs
-%{tomcat_home}/temp
-%{tomcat_home}/LICENSE
-%{tomcat_home}/NOTICE
-%{tomcat_home}/RELEASE-NOTES
-%{tomcat_home}/RUNNING.txt
-%dir %{tomcat_home}/webapps
-%{tomcat_home}/webapps/ROOT
 /var/log/%{name}/
+/var/cache/%{name}
+%dir /var/lib/%{name}/webapps
 %defattr(-,root,root)
+%{tomcat_home}/*
+%attr(0755,root,root) /usr/bin/*
+%attr(0755,root,root) /usr/sbin/*
+%dir /var/lib/%{name}
 %{_initrddir}/%{name}
 %{_sysconfdir}/logrotate.d/%{name}
 %config(noreplace) %{_sysconfdir}/sysconfig/%{name}
-%config(noreplace) %{_sysconfdir}/%{name}/*
+%config(noreplace) %{_sysconfdir}/%{name}
+%doc /usr/share/doc/%{name}-%{version}
 
-%files manager
-%{tomcat_home}/webapps/manager
+%files lib
+%defattr(0644,root,root,0755)
+/usr/share/java/%{name}
 
-%files docs
-%{tomcat_home}/webapps/docs
+%files admin-webapps
+%defattr(0644,root,root,0755)
+/var/lib/%{name}/webapps/host-manager
+/var/lib/%{name}/webapps/manager
 
-%files examples
-%{tomcat_home}/webapps/examples
+%files docs-webapp
+%defattr(0644,root,root,0755)
+/var/lib/%{name}/webapps/docs
 
-%files host-manager
-%{tomcat_home}/webapps/host-manager
+%files examples-webapp
+%defattr(0644,root,root,0755)
+/var/lib/%{name}/webapps/examples
+
+%files root-webapp
+%defattr(0644,root,root,0755)
+/var/lib/%{name}/webapps/ROOT
 
 %post
 chkconfig --add %{name}
