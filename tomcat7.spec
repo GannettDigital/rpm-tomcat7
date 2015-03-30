@@ -106,7 +106,7 @@ cd -
 
 # Drop init script
 install -d -m 755 %{buildroot}/%{_initrddir}
-install    -m 755 %_sourcedir/%{name}.init %{buildroot}/%{_initrddir}/%{name}
+install    -m 755 %_sourcedir/%{name}.init2 %{buildroot}/%{_initrddir}/%{name}
 
 # Drop sysconfig script
 install -d -m 755 %{buildroot}/%{_sysconfdir}/sysconfig/
@@ -127,10 +127,14 @@ getent passwd %{tomcat_user} >/dev/null || /usr/sbin/useradd --comment "Tomcat D
 %defattr(-,%{tomcat_user},%{tomcat_group})
 %dir %{tomcat_home}
 %{tomcat_home}/bin
+%{tomcat_home}/conf
 %{tomcat_home}/lib
 %{tomcat_home}/logs
 %{tomcat_home}/temp
-%{tomcat_home}/pid
+%{tomcat_home}/LICENSE
+%{tomcat_home}/NOTICE
+%{tomcat_home}/RELEASE-NOTES
+%{tomcat_home}/RUNNING.txt
 %dir %{tomcat_home}/webapps
 %{tomcat_home}/webapps/ROOT
 /var/log/%{name}/
