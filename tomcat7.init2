@@ -21,6 +21,8 @@
 ## Source function library.
 . /etc/rc.d/init.d/functions
 
+SHUTDOWN_VERBOSE="true"
+SHUTDOWN_WAIT=5
 NAME="$(basename $0)"
 
 unset ISBOOT
@@ -143,6 +145,7 @@ function start() {
    echo -n "Starting ${TOMCAT_PROG}: "
    if [ "$RETVAL" != "0" ]; then 
      failure
+     echo
      return
    fi
    if [ -f "/var/lock/subsys/${NAME}" ]; then
@@ -151,6 +154,7 @@ function start() {
 #           if checkpid $kpid 2>&1; then
             if [ -d "/proc/${kpid}" ]; then
                 success
+		echo
                 return 0
             fi
         fi
@@ -185,10 +189,18 @@ function start() {
     fi
     if [ "$RETVAL" -eq "0" ]; then 
         success
+	echo
         touch /var/lock/subsys/${NAME}
+        # Default catalina startup does not always give a correct pid
+        # Added the following to ensure it is populated
+        PIDCHECK=`wc -l ${CATALINA_PID} | cut -d\  -f1`
+        if [ ${PIDCHECK} -eq 0 ] ; then
+            echo `pgrep -f catalina` > ${CATALINA_PID}
+        fi
     else
         echo -n "Error code ${RETVAL}"
         failure
+        echo
     fi
 }
 
@@ -202,17 +214,20 @@ function stop() {
             echo -n "PID file empty"
             rm -f /var/lock/subsys/${NAME} /var/run/${NAME}.pid
             failure
+	    echo
             exit 4 
         fi
         if [ -z "$running_pid" ]; then
             echo -n "no ${NAME} running, but pid file exists - cleaning up"
             rm -f /var/lock/subsys/${NAME} /var/run/${NAME}.pid
             success
+	    echo
             exit 0
         fi
         if [ -z "$(echo ${kpid} | fgrep -x "${running_pid}")" ]; then
             echo -n "PID file does not match pid of any running ${NAME}"
             failure
+	    echo
             rm -f /var/lock/subsys/${NAME} /var/run/${NAME}.pid
             exit 4
         fi
@@ -262,18 +277,22 @@ function stop() {
             rm -f /var/lock/subsys/${NAME} /var/run/${NAME}.pid
             RETVAL="0"
             success
+            echo
         else
             echo -n "Unable to stop ${NAME} ($kpid)"
             RETVAL="4"
             failure
+            echo
         fi
     else
         if [ -n "$running_pid" ]; then
             echo -n "${NAME} running, but no pid file"
             failure
+	    echo
             RETVAL="4"
         else
             success
+            echo
         fi
     fi
     return $RETVAL
@@ -330,6 +349,7 @@ case "$1" in
             if [ -d "/proc/${kpid}" ]; then
                 echo -n "${NAME} (pid ${kpid}) is running..."
                 success
+                echo
                 RETVAL="0"
             else
 # The pid file exists but the process is not running
@@ -342,10 +362,12 @@ case "$1" in
             if [ -z "$pid" ]; then
                 echo "${NAME} is stopped"
                 success
+                echo
                 RETVAL="3"
             else
                 echo "${NAME} (pid $pid) is running, but PID file is missing"
                 success
+                echo
                 RETVAL="0"
             fi
         fi
