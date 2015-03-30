@@ -23,7 +23,7 @@ License:    Apache Software License
 Group:      Networking/Daemons
 URL:        http://tomcat.apache.org/
 Source0:    apache-tomcat-%{version}.tar.gz
-Source1:    %{name}.init
+Source1:    %{name}.init2
 Source2:    %{name}.sysconfig
 Source3:    %{name}.logrotate
 Requires:   jdk
@@ -43,6 +43,43 @@ learn more about getting involved, click here.
 
 This package contains the base tomcat installation that depends on Sun's JDK and not
 on JPP packages.
+
+%package manager
+Summary: The management web application of Apache Tomcat.
+Group: System Environmnet/Applications
+Requires: %{name}-%{version}-%{release}
+BuildArch: noarch
+
+%description manager
+The management web application of Apache Tomcat.
+
+%package docs
+Summary: The docs web application of Apache Tomcat.
+Group: System Environmnet/Applications
+Requires: %{name}-%{version}-%{release}
+BuildArch: noarch
+
+%description docs
+The docs web application of Apache Tomcat.
+
+%package examples
+Summary: The examples web application of Apache Tomcat.
+Group: System Environmnet/Applications
+Requires: %{name}-%{version}-%{release}
+BuildArch: noarch
+
+%description examples
+The examples web application of Apache Tomcat.
+
+%package host-manager
+Summary: The host-manager web application of Apache Tomcat.
+Group: System Environmnet/Applications
+Requires: %{name}-%{version}-%{release}
+BuildArch: noarch
+
+%description host-manager
+The host-manager web application of Apache Tomcat.
+
 
 %prep
 %setup -q -n apache-tomcat-%{version}
@@ -69,7 +106,7 @@ cd -
 
 # Drop init script
 install -d -m 755 %{buildroot}/%{_initrddir}
-install    -m 755 %_sourcedir/%{name}.init %{buildroot}/%{_initrddir}/%{name}
+install    -m 755 %_sourcedir/%{name}.init2 %{buildroot}/%{_initrddir}/%{name}
 
 # Drop sysconfig script
 install -d -m 755 %{buildroot}/%{_sysconfdir}/sysconfig/
@@ -88,13 +125,36 @@ getent passwd %{tomcat_user} >/dev/null || /usr/sbin/useradd --comment "Tomcat D
 
 %files
 %defattr(-,%{tomcat_user},%{tomcat_group})
-%{tomcat_home}/*
+%dir %{tomcat_home}
+%{tomcat_home}/bin
+%{tomcat_home}/conf
+%{tomcat_home}/lib
+%{tomcat_home}/logs
+%{tomcat_home}/temp
+%{tomcat_home}/LICENSE
+%{tomcat_home}/NOTICE
+%{tomcat_home}/RELEASE-NOTES
+%{tomcat_home}/RUNNING.txt
+%dir %{tomcat_home}/webapps
+%{tomcat_home}/webapps/ROOT
 /var/log/%{name}/
 %defattr(-,root,root)
 %{_initrddir}/%{name}
 %{_sysconfdir}/logrotate.d/%{name}
 %config(noreplace) %{_sysconfdir}/sysconfig/%{name}
 %config(noreplace) %{_sysconfdir}/%{name}/*
+
+%files manager
+%{tomcat_home}/webapps/manager
+
+%files docs
+%{tomcat_home}/webapps/docs
+
+%files examples
+%{tomcat_home}/webapps/examples
+
+%files host-manager
+%{tomcat_home}/webapps/host-manager
 
 %post
 chkconfig --add %{name}
