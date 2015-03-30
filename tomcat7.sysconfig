@@ -6,13 +6,13 @@
 #
 # This is the $JAVA_HOME of JDK, not JRE. not needed if you've setup
 # the file "/etc/profile.d/java.sh" with this variable.
-#export JAVA_HOME="/usr/java"
+export JAVA_HOME="/usr/lib/jvm/java"
 
 # CATALINA_HOME
 #
 # This is the installation directory of tomcat 7.
 # Default is /opt/tomcat7.
-#CATALINA_HOME="/usr/share/tomcat7"
+CATALINA_HOME="/usr/share/tomcat7"
 
 # RUNAS_USER
 #
