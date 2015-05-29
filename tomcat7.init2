@@ -117,7 +117,7 @@ function makeHomeDir() {
         cp -pLR /usr/share/${NAME}/conf $CATALINA_HOME
         ln -fs /usr/share/java/tomcat ${CATALINA_HOME}/lib
         ln -fs /usr/share/tomcat/webapps ${CATALINA_HOME}/webapps
-        chown ${TOMCAT_USER} /var/log/${NAME}
+        chown ${TOMCAT_USER}:${TOMCAT_USER} /var/log/${NAME}
     fi
 }
 
@@ -163,11 +163,11 @@ function start() {
     export CATALINA_PID="/var/run/${NAME}.pid"
     touch $CATALINA_PID 2>&1 || RETVAL="4"
     if [ "$RETVAL" -eq "0" -a "$?" -eq "0" ]; then 
-      chown ${TOMCAT_USER} $CATALINA_PID
+      chown ${TOMCAT_USER}:${TOMCAT_USER} $CATALINA_PID
     fi
     [ "$RETVAL" -eq "0" ] && touch $TOMCAT_LOG 2>&1 || RETVAL="4" 
     if [ "$RETVAL" -eq "0" -a "$?" -eq "0" ]; then
-      chown ${TOMCAT_USER} $TOMCAT_LOG
+      chown ${TOMCAT_USER}:${TOMCAT_USER} $TOMCAT_LOG
     fi
     if [ "$CATALINA_HOME" != "/usr/share/tomcat7" -a "$RETVAL" -eq "0" ]; then
         # Create a tomcat directory if it doesn't exist
@@ -179,7 +179,9 @@ function start() {
             -e "s/8009/${randomPort2}/g" -e "s/8443/${randomPort3}/g" \
             ${CATALINA_HOME}/conf/server.xml
     fi
-    chown ${TOMCAT_USER} /var/log/${NAME}
+    if [ -d /var/log/${NAME} ]; then
+      chown -R ${TOMCAT_USER}:${TOMCAT_USER} /var/log/${NAME}
+    fi
     parseOptions
     if [ "$RETVAL" -eq "0" -a "$SECURITY_MANAGER" = "true" ]; then
         $SU - $TOMCAT_USER -c "${TOMCAT_SCRIPT} start-security" \
